@@ -1,0 +1,58 @@
+
+> @workspace/admin@0.0.0 dev /home/runner/workspace/artifacts/admin
+> vite --config vite.config.ts --host 0.0.0.0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J
+  [32m[1mVITE[22m v7.3.1[39m  [2mready in [0m[1m1302[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m23744[22m/admin/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://172.31.85.66:[1m23744[22m/admin/[39m
+[2m[32m  ➜[39m[22m[2m  press [22m[1mh + enter[22m[2m to show help[22m
+[RUNTIME_ERROR]{"type":"runtime-error","timestamp":1773461456919,"name":"Error","message":"Trophy is not defined","stack":"    at /home/runner/workspace/artifacts/admin/src/pages/markets.tsx:86:20\n    at Array.map (<anonymous>)\n    at MarketsPage /home/runner/workspace/artifacts/admin/src/pages/markets.tsx:62:19\n\n\n\n\n\n\n","loc":{"line":86,"column":20,"file":"/home/runner/workspace/artifacts/admin/src/pages/markets.tsx"},"frame":"84 |                  </div>\n85 |                  <div className=\"flex items-center gap-2 text-sm text-muted-foreground\">\n86 |                    <Trophy className=\"w-4 h-4 text-primary\" />\n   |                     ^\n87 |                    Latest Result: <span className=\"text-primary font-bold text-lg ml-1 bg-primary/10 px-2 rounded\">{market.latestResult || \"---\"}</span>\n88 |                  </div>"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m4:11:37 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/markets.tsx, /src/index.css[22m
