@@ -48,3 +48,9 @@ timeoutMs = 20000
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+JWT_SECRET = "haryana-ki-shan-secret-2024"
+ADMIN_JWT_SECRET = "haryana-ki-shan-admin-secret-2024"
