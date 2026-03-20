@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const BASE_URL = "https://9227557c-0887-4e63-87e1-1dd9dbc05ec8-00-28ciysexnth82.pike.replit.dev/api";
+const BASE_URL = "https://haryana-my-love-2jd4.onrender.com/api";
 
 
 
