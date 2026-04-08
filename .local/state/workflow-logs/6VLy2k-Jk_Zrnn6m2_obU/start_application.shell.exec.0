@@ -1,0 +1,60 @@
+[1] 107
+
+> @workspace/admin@0.0.0 dev /home/runner/workspace/artifacts/admin
+> vite --config vite.config.ts --host 0.0.0.0
+
+
+> @workspace/api-server@0.0.0 dev /home/runner/workspace/artifacts/api-server
+> NODE_ENV=development tsx ./src/index.ts
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J
+  [32m[1mVITE[22m v7.3.1[39m  [2mready in [0m[1m1941[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m3000[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://172.31.125.130:[1m3000[22m/[39m
+[2m[32m  ➜[39m[22m[2m  press [22m[1mh + enter[22m[2m to show help[22m
+/home/runner/workspace/node_modules/.pnpm/path-to-regexp@8.3.0/node_modules/path-to-regexp/src/index.ts:225
+      throw new PathError(`Missing parameter name at index ${index}`, str);
+            ^
+
+PathError [TypeError]: Missing parameter name at index 1: *; visit https://git.new/pathToRegexpError for info
+    at name (/home/runner/workspace/node_modules/[4m.pnpm[24m/path-to-regexp@8.3.0/node_modules/[4mpath-to-regexp[24m/src/index.ts:225:13)
+    at parse (/home/runner/workspace/node_modules/[4m.pnpm[24m/path-to-regexp@8.3.0/node_modules/[4mpath-to-regexp[24m/src/index.ts:242:62)
+    at pathToRegexp (/home/runner/workspace/node_modules/[4m.pnpm[24m/path-to-regexp@8.3.0/node_modules/[4mpath-to-regexp[24m/src/index.ts:480:54)
+    at Object.match (/home/runner/workspace/node_modules/[4m.pnpm[24m/path-to-regexp@8.3.0/node_modules/[4mpath-to-regexp[24m/src/index.ts:438:28)
+    at matcher (/home/runner/workspace/node_modules/[4m.pnpm[24m/router@2.2.0/node_modules/[4mrouter[24m/lib/layer.js:86:23)
+    at new Layer (/home/runner/workspace/node_modules/[4m.pnpm[24m/router@2.2.0/node_modules/[4mrouter[24m/lib/layer.js:93:62)
+    at router.route (/home/runner/workspace/node_modules/[4m.pnpm[24m/router@2.2.0/node_modules/[4mrouter[24m/index.js:428:17)
+    at app.route (/home/runner/workspace/node_modules/[4m.pnpm[24m/express@5.2.1/node_modules/[4mexpress[24m/lib/application.js:257:22)
+    at app.<computed> [as options] (/home/runner/workspace/node_modules/[4m.pnpm[24m/express@5.2.1/node_modules/[4mexpress[24m/lib/application.js:478:22)
+    at <anonymous> [90m(/home/runner/workspace/artifacts/api-server/[39msrc/app.ts:14:5[90m)[39m {
+  originalPath: [32m'*'[39m
+}
+
+Node.js v24.13.0
+/home/runner/workspace/artifacts/api-server:
+[41m[30m ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL [39m[49m [31m@workspace/api-server@0.0.0 dev: `NODE_ENV=development tsx ./src/index.ts`[39m
+[31mExit status 1[39m

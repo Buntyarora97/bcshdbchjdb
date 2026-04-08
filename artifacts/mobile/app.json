@@ -38,9 +38,13 @@
       "reactCompiler": true
     },
     "extra": {
+      "router": {
+        "origin": "https://replit.com/"
+      },
       "eas": {
-        "projectId": "782adc67-55e0-4881-a344-b9a04e4b7dd9"
+        "projectId": "5f0a4085-1e2d-4197-94bb-4edfbacff695"
       }
-    }
+    },
+    "owner": "sahil.arora"
   }
 }
