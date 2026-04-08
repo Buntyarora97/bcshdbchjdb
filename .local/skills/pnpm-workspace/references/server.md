@@ -264,6 +264,24 @@ Dates work out of the box when casting from DB results to Zod (OpenAPI) schema.
 
 For numeric fields coming from inputs such as query params and path params, the Zod types are already configured to coerce correctly from string to the target type.
 
+### String field validation
+
+When validating required string fields in route handlers, use `content == null` or `typeof content !== "string"` rather than `!content`. An empty string `""` is a valid value for text content fields — falsy checks (`!content`) will incorrectly reject it with a 400 error. Only use `!field` for fields that must be non-empty (like `title`).
+
+```typescript
+// WRONG — rejects content: "" which is valid for a new blank note
+if (!title || !content) {
+  res.status(400).json({ error: "Missing required fields" });
+  return;
+}
+
+// CORRECT — title must be non-empty, content is allowed to be empty
+if (!title || content == null) {
+  res.status(400).json({ error: "Missing required fields" });
+  return;
+}
+```
+
 When sending a response early (404, 400, etc.), use `res.status().json(); return;` — never `return res.status().json()`:
 
 ```typescript

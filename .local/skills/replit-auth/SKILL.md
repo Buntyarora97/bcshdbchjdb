@@ -1,6 +1,6 @@
 ---
 name: replit-auth
-description: Integrate Replit Auth (OpenID Connect with PKCE) into a pnpm monorepo with Express, React+Vite, and Expo React Native. Covers auth routes, middleware, web client hook, mobile auth, database schema, and session management. Use when the user asks to add authentication, login, sign-in, or user accounts using Replit Auth.
+description: "Integrate Replit Auth (OpenID Connect with PKCE) into a pnpm monorepo with Express, React+Vite, and Expo React Native. Covers auth routes, middleware, web client hook, mobile auth, database schema, and session management. Use when the user asks to add authentication, login, sign-in, or user accounts, and explicitly requests to use Replit Auth, Replit SSO, or sign-in with Replit."
 ---
 
 # Replit Auth for pnpm Monorepo (Express + React + Optional Expo)
@@ -199,9 +199,23 @@ cp .local/skills/replit-auth/templates/mobile/auth.tsx artifacts/<YOUR_MOBILE_AP
 
 #### Dependencies
 
+Expo ecosystem packages (`expo-*`) must be version-pinned to match the project's Expo SDK. Running `pnpm add` without a version resolves to the latest on npm, which may belong to a newer SDK and break the app.
+
+For SDK 54 projects:
+
 ```bash
-pnpm --filter @workspace/<mobile-app> add expo-auth-session expo-crypto expo-web-browser expo-secure-store
+pnpm --filter @workspace/<mobile-app> add expo-auth-session@~7.0.10 expo-crypto@~15.0.8 expo-web-browser@~15.0.10 expo-secure-store@~15.0.8
 ```
+
+If the project already has any of these packages installed at compatible versions, they can be omitted from the command. If additional `expo-*` packages are needed, use this SDK 54 version reference:
+
+| Package | SDK 54 version |
+|---|---|
+| `expo-auth-session` | `~7.0.10` |
+| `expo-secure-store` | `~15.0.8` |
+| `expo-crypto` | `~15.0.8` |
+| `expo-web-browser` | `~15.0.10` |
+| `expo-constants` | `~18.0.11` |
 
 #### Environment Variables
 
@@ -224,6 +238,19 @@ Ensure the scheme and plugin are configured:
     "plugins": ["expo-web-browser"]
   }
 }
+```
+
+#### Configure API Client
+
+On mobile, the Expo bundle talks to the API server directly so the base URL must be set explicitly, and there are no cookies so an auth token getter must be registered to attach a bearer token. Configure `@workspace/api-client-react`'s `customFetch` (see `lib/api-client-react/src/custom-fetch.ts`) at module level before any component renders:
+
+```tsx
+import * as SecureStore from "expo-secure-store";
+import { setAuthTokenGetter, setBaseUrl } from "@workspace/api-client-react";
+
+const domain = process.env.EXPO_PUBLIC_DOMAIN;
+if (domain) setBaseUrl(`https://${domain}`);
+setAuthTokenGetter(() => SecureStore.getItemAsync("auth_session_token"));
 ```
 
 #### Wiring the Auth Provider

@@ -65,16 +65,7 @@ This generates files such as React Query hooks and Zod schemas. It is strongly r
 
 ## Logging
 
-The API server uses `pino` for structured JSON logging. **Never use `console.log` or `console.error` in server code.** Inside route handlers and middleware, use `req.log` (the request-scoped child logger from `pino-http`) so logs automatically include the request ID. Use the singleton `logger` from `artifacts/api-server/src/lib/logger.ts` only for non-request code (startup, shutdown, background tasks). See `references/server.md` for full details and examples.
-
-**Older workspaces** created before the structured-logging stack update may not have `pino-http` middleware in `app.ts` or `artifacts/api-server/src/lib/logger.ts`. Before using `req.log` or importing the singleton `logger`, check whether these exist. If they are missing, add them first:
-
-```bash
-pnpm --filter @workspace/api-server add pino pino-http
-pnpm --filter @workspace/api-server add -D pino-pretty
-```
-
-Then create `artifacts/api-server/src/lib/logger.ts` and add the canonical `pinoHttp` middleware in `app.ts` before the routes — see `references/server.md` for the full canonical content of both.
+**Never use `console.log` in server code.** Use `req.log` in route handlers and the singleton `logger` for non-request code. See `references/server.md` for setup and examples.
 
 ## References
 
@@ -125,63 +116,14 @@ Workspace package rules:
 
 ### devDependencies vs dependencies
 
-Prefer `devDependencies` over `dependencies` whenever possible to reduce deployed image size. Everything that is served statically (React apps, Vite-built frontends) or only needed at build time should be a `devDependency`. The deployment pipeline runs `pnpm prune --prod` via `postBuild` to strip them from the final container image.
-
-Rules:
-
-1. **Static/client-only artifacts** (e.g. Vite-built React apps): all packages should be `devDependencies` since nothing is `require`'d at runtime — the output is static files.
-2. **Server artifacts**: packages imported at runtime (e.g. `express`, `drizzle-orm`, `pg`) stay in `dependencies`. Everything else — build tools (`esbuild`, `tsx`, `vite`), type definitions (`@types/*`), linters, and test frameworks — goes in `devDependencies`.
-3. **Libraries**: runtime exports stay in `dependencies` (or `peerDependencies` for shared runtimes); codegen tools and type-only packages go in `devDependencies`.
-4. When in doubt, check whether the package is imported in code that runs in production. If not, it is a `devDependency`.
-
-### Dependency catalogs
-
-`pnpm-workspace.yaml` uses `catalog:` entries to pin shared versions in one place.
-
-Use the catalog when:
-
-- a dependency is shared by a library and its consumers
-- a dependency should stay aligned across multiple workspace packages
-
-Rules:
-
-1. If a dependency already exists in the catalog, use `"catalog:"`.
-2. If a lib and its consumers both use a dependency, prefer adding it to the catalog and updating all relevant packages together.
-3. Only hardcode versions when a package truly must diverge.
-
-Example:
-
-```json
-{
-  "dependencies": {
-    "react": "catalog:",
-    "zod": "catalog:"
-  }
-}
-```
-
-### Shared runtime dependencies
-
-Be careful with shared runtime dependencies like `react`, `react-dom`, or `@tanstack/react-query`.
-
-- If a workspace lib and its consumers resolve different copies, you get duplicate runtime instances or type identity problems (e.g. broken hooks/context, confusing TypeScript errors).
-- Libraries should declare shared runtimes as `peerDependencies`; apps install the concrete version.
-- Use the catalog-pinned version by default. Avoid introducing separate versions casually.
+- **Static/client-only artifacts** (Vite-built React apps): all packages → `devDependencies`.
+- **Server artifacts**: runtime imports (`express`, `drizzle-orm`, `pg`) → `dependencies`; build tools, `@types/*` → `devDependencies`.
+- If a dependency already exists in the `pnpm-workspace.yaml` catalog, use `"catalog:"`.
+- Libraries should declare shared runtimes (`react`, `react-dom`) as `peerDependencies`.
 
 ## Codegen Outputs
 
-After running `pnpm --filter @workspace/api-spec run codegen`, Orval writes the generated client to fixed paths:
-
-- `lib/api-client-react/src/generated/api.ts`
-- `lib/api-client-react/src/generated/api.schemas.ts`
-- `lib/api-zod/src/generated/api.ts`
-
-The workspace barrels re-export those fixed filenames:
-
-- `lib/api-client-react/src/index.ts`
-- `lib/api-zod/src/index.ts`
-
-The Orval config forces the OpenAPI title to `Api`, so do not try to control generated filenames via `info.title`. If you touch the codegen config or scaffolded barrel files, keep them aligned with the fixed `generated/api*` filenames.
+See `references/openapi.md` for generated file paths and naming conventions. Do not change the OpenAPI `info.title` — it controls generated filenames.
 
 ## Common pitfalls
 

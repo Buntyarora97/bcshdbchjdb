@@ -1,6 +1,6 @@
 ---
 name: artifacts
-description: "Use when creating or updating the artifact.toml for artifacts such as websites, web apps, mobile apps, slide decks, pitch decks, videos, and data visualizations. Formerly called the create-artifact skill."
+description: "Use when creating or updating the artifact.toml for artifacts such as websites, web apps, mobile apps, slide decks, pitch decks, videos, and data visualizations."
 ---
 
 
@@ -10,7 +10,7 @@ description: "Use when creating or updating the artifact.toml for artifacts such
 
 An **artifact** is a runnable project that the agent creates for the user. It is the primary unit of output the agent delivers.
 
-Each artifact is a workspace package under `artifacts/<slug>/` in the monorepo. Calling `createArtifact()` runs the shared bootstrap flow for the chosen artifact type, scaffolds the project files, installs dependencies, writes an `artifact.toml` with metadata, allocates service ports, and wires the artifact into `.replit` so it can be previewed and deployed.
+Each artifact is a workspace package under `artifacts/<slug>/` in the monorepo. Calling `createArtifact()` runs the shared bootstrap flow for the chosen artifact type, scaffolds the project files, writes an `artifact.toml` with metadata so it can be previewed, and allocates service ports. Dependency installation begins in the background and may still be running when `createArtifact()` returns.
 
 When the user asks you to "build a website" or "create an app", you are creating an artifact. Call `createArtifact()` once, then continue implementation.
 
@@ -42,29 +42,32 @@ If ambiguous, ask the user: "Should I create this as a new standalone web app, o
 Not all artifacts follow the same workflow. Choose your approach based on the artifact type:
 
 - **Creative / canvas artifacts** — no backend, no OpenAPI, no codegen:
-  - **mockup-sandbox** (design mockups, landing pages, UI prototypes): Read the `mockup-sandbox` skill. It uses its own Vite dev server and canvas iframes. Delegate design work to a DESIGN subagent. No artifact is needed if the mockup sandbox is present.
+  - **mockup-sandbox** (design mockups, UI prototypes, variant comparisons): Read the `mockup-sandbox` skill. It uses its own Vite dev server and canvas iframes. Delegate design work to a DESIGN subagent. No artifact is needed if the mockup sandbox is present.
   - **slides** (slide decks, presentations): Create a slides artifact and build following the `slides` skill — no subagent is needed. Use `media-generation` for images.
   - **video-js** (short animated videos, up to 5 minutes): Create a video artifact and build following the `video-js` skill. Always delegate the entire build to a DESIGN subagent — do not build the video yourself. This is for creating animated content from code, not a video editor.
 - **Full-stack artifacts** (react-vite, data-visualization, expo): Follow the OpenAPI-first workflow below.
-  - If a `react-vite` artifact is frontend-only and does not need a backend, skip the OpenAPI spec and codegen steps — go straight to building the frontend after calling `createArtifact()`.
+  - If a `react-vite` artifact is frontend-only and does not need a backend, skip the OpenAPI spec and codegen steps — go straight to building the frontend after calling `createArtifact()`, still using design subagent for the frontend.
+  - **Expo apps: skip the OpenAPI workflow by default.** Most mobile apps do not need a backend on the first build. Use AsyncStorage for persistence. Do NOT create a database, OpenAPI spec, or backend routes unless the user explicitly asks for server-side features. After `createArtifact()`, go straight to the Expo skill's `<first_build>` sequence.
 
 **Full-stack artifacts — OpenAPI-first workflow:**
 
 Get async work running as early as possible so it can proceed in the background while you build.
 
 1. **Create the artifact** — call `createArtifact()`. It will guide you to the artifact's skill for build instructions.
-2. **Write the OpenAPI spec** in `lib/api-spec/openapi.yaml` — this is the single source of truth for all API contracts. It is on the critical path: the spec gates codegen, which gates the frontend.
+2. **Write the OpenAPI spec** in `lib/api-spec/openapi.yaml` — this is the single source of truth for all API contracts. It is on the critical path: the spec gates codegen, which gates the frontend. Include both core CRUD and safe wow endpoints — lightweight read-only endpoints that make the app feel polished (dashboard summaries, recent activity, grouped counts, domain aggregates) — the artifact's skill has details on what to plan.
 3. **Run codegen** (`pnpm run --filter @workspace/api-spec codegen`) — generates React Query hooks and Zod schemas. Do NOT read the generated files; they are large and will fill your context.
-4. **Launch the frontend build immediately after codegen** — the artifact's skill will tell you how (e.g., `generateFrontend()` for react-vite, design subagent for others). Do NOT do any other work between codegen and launching the frontend build.
-5. **Build the backend while the frontend runs** — provision the database, write the schema, build route handlers, and seed data. The frontend is the bottleneck.
+4. **Launch the frontend build immediately after codegen** — the artifact's skill will tell you how (e.g., async design subagent for react-vite and data-visualization). Do NOT do any other work between codegen and launching the frontend build.
+5. **Build the backend while the frontend runs** — provision the database, write the schema, build route handlers, and seed data. The frontend is the bottleneck. **Exception: Expo apps should NOT use this workflow unless the user explicitly requested a backend. Use AsyncStorage instead.**
 
 **Key principles:**
 
 - Do NOT provision the database or write DB schema before launching the frontend build. DB work doesn't gate the frontend — OpenAPI does.
+- **Expo reminder: do not create a database for Expo apps in the first build.** Use AsyncStorage. This is the most common mistake.
 - There is no need to test or code review the first build.
 - Trust generated frontend and subagent output as-is. Do not verify it.
 - Batch independent operations within the same artifact into parallel tool calls (e.g., write multiple files for the same artifact at once, read multiple files at once). Do NOT try to build two artifacts simultaneously — build one at a time.
 - Do not waste time reading files you don't need. All important files have been opened for you.
+- Do not read the artifact's skill before creating the artifact or the skill will be read twice. Creating an artifact automatically loads the relevant skill instructions into your context. Do not waste time reading the skill yourself.
 
 ## Creating an Artifact
 
@@ -208,7 +211,7 @@ await suggestDeploy();
 await presentArtifact({artifactId: result.artifactId});
 ```
 
-- `presentArtifact` opens the preview pane so the user can see what you built. Without this call, the user won't see the artifact preview — even if the app is running correctly. Pass the `artifactId` (str, required) returned by `createArtifact`.
+- `presentArtifact` opens the preview pane so the user can see what you built. Without this call, the user won't see the artifact preview — even if the app is running correctly. Pass the `artifactId` (str, required) returned by `createArtifact`. For canvas/design artifacts, also pass `shapeIds` (list[str], optional) — the IDs of shapes to focus on when the preview opens, so the viewport centers on the relevant content automatically.
 - `suggestDeploy` prompts the user to publish their project with one click. Takes no parameters. This is a terminal action — once called, do not take further actions.
 
 Always call `presentArtifact` after finishing work on any artifact — whether you just created it, made changes to it, or fixed a bug in it. If you built multiple artifacts, present each one. Some skills define additional post-present steps (e.g., data analysis); follow those skill-specific instructions after presenting.
@@ -255,8 +258,16 @@ const expoPort = result.ports.expo;
 
 // Expo is scaffolded under artifacts/my-app
 // and API work should be added to the shared api-server.
+//
+// Multi-artifact note: do not tell the subagent to read a sibling web
+// artifact's src/index.css for design tokens here — that CSS is only
+// trustworthy after the web frontend build has finished. Instead,
+// extract tokens in the main loop after the web build completes, sync
+// them into constants/colors.ts (colors + radius), app.json, and _layout.tsx yourself,
+// then launch the Expo subagent with the synced files. See
+// multi-artifact-creation.md "Visual Consistency" for the full sequence.
 await startAsyncSubagent({
-    task: "Build the mobile app",
+    task: "Build the mobile app frontend. Read the expo SKILL.md, then implement the UI components and screens. Use the design tokens from constants/colors.ts via the useColors hook (colors and radius), configure fonts in app/_layout.tsx, and set the splash background in app.json.",
     fromPlan: true,
     relevantFiles: [
         ".local/skills/expo/SKILL.md",
@@ -264,7 +275,9 @@ await startAsyncSubagent({
         "artifacts/my-app/app/(tabs)/_layout.tsx",
         "artifacts/my-app/app/(tabs)/index.tsx",
         "artifacts/api-server/src/index.ts",
-        "artifacts/my-app/constants/colors.ts"
+        "artifacts/my-app/constants/colors.ts",
+        "artifacts/my-app/hooks/useColors.ts",
+        "artifacts/my-app/app.json"
     ]
 });
 

@@ -1,8 +1,27 @@
-# Workspace
+# Haryana Ki Shan - Satta Matka App
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+Full-stack Satta Matka gaming platform. pnpm workspace monorepo using TypeScript.
+
+**Admin Login:** admin@hks.com / admin123 (Super Admin)
+
+### Key Features
+- **Jodi betting** (2-digit 00-99, 90x return)
+- **Haruf betting** (single digit 0-9, 9x return)
+- **Multi-bet**: Place bets on multiple numbers at once with single payment
+- **Super Admin** system: One master admin manages sub-admins (create/delete/password reset)
+- **Min deposit**: ₹50 | **Min bet**: ₹10
+- **Auto win/loss**: Declared results automatically credit winners and mark losers
+- **Bet analytics**: Shows which numbers have most money at stake (risk exposure)
+- **Home page**: Latest Results banner, live ticker, market status cards
+
+### Deployment
+- Admin Panel: Build and deploy `artifacts/admin/dist/` to Hostinger
+- Backend: Deploy to Render with `DATABASE_URL`, `JWT_SECRET`, `ADMIN_JWT_SECRET`
+- Database: Neon PostgreSQL
+- Mobile APK: `eas build --platform android --profile preview` (from `artifacts/mobile/`)
+- See `DEPLOYMENT.md` for full step-by-step guide
 
 ## Stack
 

@@ -1,0 +1,39 @@
+[1] 667
+
+> @workspace/admin@0.0.0 dev /home/runner/workspace/artifacts/admin
+> vite --config vite.config.ts --host 0.0.0.0
+
+
+> @workspace/api-server@0.0.0 dev /home/runner/workspace/artifacts/api-server
+> NODE_ENV=development tsx ./src/index.ts
+
+
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+Error [TransformError]: The service was stopped: spawn /home/runner/workspace/node_modules/.pnpm/@esbuild+linux-x64@0.27.3/node_modules/@esbuild/linux-x64/bin/esbuild EACCES
+    at /home/runner/workspace/node_modules/[4m.pnpm[24m/esbuild@0.27.3/node_modules/[4mesbuild[24m/lib/main.js:718:38
+    at responseCallbacks.<computed> (/home/runner/workspace/node_modules/[4m.pnpm[24m/esbuild@0.27.3/node_modules/[4mesbuild[24m/lib/main.js:603:9)
+    at ChildProcess.afterClose (/home/runner/workspace/node_modules/[4m.pnpm[24m/esbuild@0.27.3/node_modules/[4mesbuild[24m/lib/main.js:594:28)
+[90m    at ChildProcess.emit (node:events:508:28)[39m
+[90m    at ChildProcess._handle.onexit (node:internal/child_process:292:12)[39m
+[90m    at onErrorNT (node:internal/child_process:484:16)[39m
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)[39m
+
+Node.js v24.13.0
+/home/runner/workspace/artifacts/api-server:
+[41m[30m ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL [39m[49m [31m@workspace/api-server@0.0.0 dev: `NODE_ENV=development tsx ./src/index.ts`[39m
+[31mExit status 1[39m
+[31mfailed to load config from /home/runner/workspace/artifacts/admin/vite.config.ts[39m
+[31merror when starting dev server:
+Error: The service was stopped: spawn /home/runner/workspace/node_modules/.pnpm/@esbuild+linux-x64@0.27.3/node_modules/@esbuild/linux-x64/bin/esbuild EACCES
+    at /home/runner/workspace/node_modules/.pnpm/esbuild@0.27.3/node_modules/esbuild/lib/main.js:949:34
+    at responseCallbacks.<computed> (/home/runner/workspace/node_modules/.pnpm/esbuild@0.27.3/node_modules/esbuild/lib/main.js:603:9)
+    at ChildProcess.afterClose (/home/runner/workspace/node_modules/.pnpm/esbuild@0.27.3/node_modules/esbuild/lib/main.js:594:28)
+    at ChildProcess.emit (node:events:508:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:292:12)
+    at onErrorNT (node:internal/child_process:484:16)
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)[39m
+/home/runner/workspace/artifacts/admin:
+[41m[30m ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL [39m[49m [31m@workspace/admin@0.0.0 dev: `vite --config vite.config.ts --host 0.0.0.0`[39m
+[31mExit status 1[39m

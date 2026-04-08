@@ -64,8 +64,8 @@ router.post("/deposit", authMiddleware, async (req, res) => {
     if (!amount || !upiId) {
       return res.status(400).json({ success: false, message: "Amount and UPI ID required" });
     }
-    if (amount < 100) {
-      return res.status(400).json({ success: false, message: "Minimum deposit is ₹100" });
+    if (amount < 50) {
+      return res.status(400).json({ success: false, message: "Minimum deposit is ₹50" });
     }
     await db.insert(depositRequestsTable).values({
       userId,

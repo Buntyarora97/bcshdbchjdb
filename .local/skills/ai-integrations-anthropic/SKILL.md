@@ -78,6 +78,15 @@ const result = await setupReplitAIIntegrations({
 console.log(result);
 ```
 
+When setting up multiple AI integrations, call `setupReplitAIIntegrations` sequentially — wait for each call to finish before starting the next. For example:
+
+```javascript
+const anthropicResult = await setupReplitAIIntegrations({ providerSlug: "anthropic", ... });
+console.log(anthropicResult);
+const openaiResult = await setupReplitAIIntegrations({ providerSlug: "openai", ... });
+console.log(openaiResult);
+```
+
 ### 2. Copy the template files into your project
 
 ```bash

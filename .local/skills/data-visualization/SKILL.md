@@ -49,7 +49,7 @@ This skill uses the **react-vite scaffold** with backend conventions from the **
 
 See `references/common-bootstrap.md` for the full step-by-step workflow.
 
-**IMPORTANT:** Data visualization artifacts must use the design subagent workflow, not generateFrontend(). The reference files contain critical layout and styling specifications that only the design subagent can consume.
+**IMPORTANT:** Data visualization artifacts must use the design subagent workflow. The reference files contain critical layout and styling specifications that only the design subagent can consume. Plan dashboard summary, grouped counts, and trend endpoints in the OpenAPI spec so the design subagent has real hooks for the wow surfaces.
 
 ## App Type Classification
 

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard, Users, Store, Trophy, 
   ArrowDownCircle, ArrowUpCircle, CreditCard, 
-  BarChart3, LogOut, Crown, Menu, X
+  BarChart3, LogOut, Crown, Menu, Shield, UserCog
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -18,12 +18,18 @@ const NAV_ITEMS = [
   { href: "/withdrawals", label: "Withdrawals", icon: ArrowUpCircle },
   { href: "/upi", label: "UPI Accounts", icon: CreditCard },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/sub-admins", label: "Admin Management", icon: Shield, superAdminOnly: true },
+  { href: "/my-account", label: "My Account", icon: UserCog },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { logout, adminUser } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+
+  const isSuperAdmin = adminUser?.isSuperAdmin;
+
+  const visibleNavItems = NAV_ITEMS.filter(item => !item.superAdminOnly || isSuperAdmin);
 
   const SidebarContent = () => (
     <>
@@ -32,13 +38,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <Crown className="w-6 h-6 text-black" />
         </div>
         <div>
-          <h1 className="font-display font-bold text-lg text-white leading-tight">Haryana</h1>
+          <h1 className="font-display font-bold text-lg text-white leading-tight">Haryana Ki Shan</h1>
           <p className="text-xs text-primary font-medium tracking-widest uppercase">Admin Panel</p>
         </div>
       </div>
 
-      <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-        {NAV_ITEMS.map((item) => {
+      <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+        {visibleNavItems.map((item) => {
           const isActive = location === item.href;
           return (
             <Link 
@@ -49,14 +55,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden",
                 isActive 
                   ? "text-primary font-medium bg-primary/10" 
-                  : "text-muted-foreground hover:text-white hover:bg-white/5"
+                  : "text-muted-foreground hover:text-white hover:bg-white/5",
+                item.superAdminOnly && "border border-primary/20 mt-2"
               )}
             >
               {isActive && (
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
               )}
-              <item.icon className={cn("w-5 h-5 transition-transform group-hover:scale-110", isActive && "text-primary")} />
-              {item.label}
+              <item.icon className={cn("w-5 h-5 transition-transform group-hover:scale-110", isActive && "text-primary", item.superAdminOnly && "text-primary/70")} />
+              <span>{item.label}</span>
+              {item.superAdminOnly && (
+                <span className="ml-auto text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded-full">SA</span>
+              )}
             </Link>
           );
         })}
@@ -68,7 +78,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {adminUser?.name?.charAt(0) || "A"}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">{adminUser?.name || "Admin"}</p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-sm font-medium text-white truncate">{adminUser?.name || "Admin"}</p>
+              {isSuperAdmin && <Crown className="w-3 h-3 text-primary shrink-0" />}
+            </div>
             <p className="text-xs text-muted-foreground truncate">{adminUser?.email}</p>
           </div>
         </div>
@@ -85,12 +98,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background flex overflow-hidden">
-      {/* Desktop Sidebar */}
       <aside className="hidden lg:flex w-72 flex-col bg-card border-r border-border relative z-20">
         <SidebarContent />
       </aside>
 
-      {/* Mobile Sidebar */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <>
@@ -114,7 +125,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         )}
       </AnimatePresence>
 
-      {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <header className="h-16 border-b border-border bg-card/50 backdrop-blur-md flex items-center px-4 lg:px-8 shrink-0 sticky top-0 z-30 justify-between lg:justify-end">
           <button 
@@ -124,6 +134,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Menu className="w-6 h-6" />
           </button>
           <div className="flex items-center gap-4">
+            {isSuperAdmin && (
+              <div className="hidden sm:flex items-center gap-1.5 text-xs text-primary bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20">
+                <Crown className="w-3 h-3" />
+                Super Admin
+              </div>
+            )}
             <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground bg-secondary/50 px-3 py-1.5 rounded-full border border-border">
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
               System Active

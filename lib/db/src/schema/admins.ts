@@ -8,9 +8,11 @@ export const adminsTable = pgTable("admins", {
   password: text("password").notNull(),
   name: text("name").notNull(),
   isActive: boolean("is_active").notNull().default(true),
+  isSuperAdmin: boolean("is_super_admin").notNull().default(false),
   taxRate: text("tax_rate").notNull().default("10"),
   jodiMultiplier: text("jodi_multiplier").notNull().default("90"),
   singleMultiplier: text("single_multiplier").notNull().default("9"),
+  haruftMultiplier: text("haruft_multiplier").notNull().default("9"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

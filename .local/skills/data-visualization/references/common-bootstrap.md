@@ -47,7 +47,7 @@ const result = await createArtifact({
 });
 ```
 
-**Important:** `createArtifact()` handles workflows, Node.js, and npm deps automatically. Do **not** call `configureWorkflow()`, `installProgrammingLanguage()`, or install deps manually.
+**Important:** `createArtifact()` handles workflows, Node.js, and npm deps automatically — dependency installation starts in the background and may still be running when the call returns. Do **not** call `configureWorkflow()`, `installProgrammingLanguage()`, or install deps manually.
 
 **1a. Install data-viz packages:**
 
@@ -111,16 +111,15 @@ curl http://localhost:80/api/{ENDPOINT} | jq '.'
 
 ### Delegate to a Design Subagent
 
-1. Launch design subagent (async) with `subagent()`
+1. Launch design subagent (async) with `startAsyncSubagent()`
 2. While it runs, implement api-server routes in `artifacts/api-server/src/routes/`
 3. Wait for design subagent to finish
 
-**Do NOT use `generateFrontend()` for data-visualization artifacts** — it bypasses the design references that are critical for consistent dashboard styling. You must follow the reference files exactly.
+**Always use the design subagent for data-visualization artifacts** — the reference files contain critical layout and styling specifications that the design subagent can consume. You must follow the reference files exactly. The design subagent should express the planned product surface beautifully, not invent net-new features beyond it.
 
 ```javascript
-await subagent({
+await startAsyncSubagent({
     task: `Build the data visualization [DASHBOARD|REPORT|EXPLORER]...`,
-    fromPlan: true,
     specialization: "DESIGN",
     relevantFiles: [
         // Data-viz specific references

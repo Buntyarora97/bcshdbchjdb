@@ -26,4 +26,4 @@ For a fitness tracking app:
 For a recipe app:
 > "An elegant app icon featuring a stylized chef's hat shape in warm cream white with a subtle gradient, overlapping a circular plate shape in soft terracotta, minimalist design, clean background in light sage green. Absolutely no text, letters, numbers, shadows, or alphanumeric characters visible anywhere."
 
-Use the generated icon as the splash screen icon as well, ensuring visual consistency across the app's branding.
+Use the generated icon as the splash screen icon as well, ensuring visual consistency across the app's branding. Save to `assets/images/icon.png` — do not generate or save a separate `splash-icon.png` unless explicitly asked to do so.

@@ -5,6 +5,8 @@ description: Instructions for building and editing slide deck artifacts in the R
 
 # Slides -- Presentation Decks in Code
 
+
+
 <context>
 A slides artifact is a React + Tailwind CSS application that functions as a slide deck. Each slide is a separate React component file in `src/pages/slides/`, rendered at a unique `/slideN` URL route (e.g., `/slide1`, `/slide2`). This React app runs inside a workspace app preview, where the preview wraps it in a custom slide viewer / editor UI. That UI provides a thumbnail sidebar for navigation, PPTX export, and visual editing controls that let the user reorder slides, add or delete slides, and edit visual properties like colors and text directly from the Replit interface.
 
@@ -12,34 +14,60 @@ The workspace UI includes a visual editor that lets users click on elements in a
 
 The slide manifest at `src/data/slides-manifest.json` is the contract between your React app and the workspace. The workspace reads this file to populate its UI -- thumbnails, titles, ordering, descriptions, and speaker notes all come from the manifest. Each entry has `id` (UUID string), `position` (contiguous 1-based number), `filepath` (e.g. `src/pages/slides/MarketOverview.tsx`), `title`, `description`, and `speakerNotes`. Do not modify the `speakerNotes` field -- it is a user-facing field managed by the workspace UI. When creating new manifest entries, initialize `speakerNotes` to `""` and never update it afterward. When you create, remove, or reorder slides you must update this manifest. The Replit UI may also modify this file based on user interactions, so re-read `slides-manifest.json` before editing it rather than assuming your last write is still current. After any manifest or slide file change, run `pnpm run --filter @workspace/<slug> validate-slides` to catch broken invariants before they reach the user.
 
-When the app is deployed or loaded, visiting the root URL (`/`) automatically redirects to the first slide (`/slide1`). This redirect is built into `App.tsx` and must not be removed. The SPA is configured with a catch-all rewrite so that direct navigation to any `/slideN` URL works correctly. No additional routing configuration is needed for deployment.
+Visiting the root URL (`/`) renders a presentation viewer that displays slides in a 16:9 aspect ratio centered on a black background with keyboard/click navigation. Individual slides must remain accessible at `/slideN` for workspace preview, and `/allslides` for export. Unknown routes redirect to the first slide. The routing logic in `App.tsx` must not be modified. The SPA is configured with a catch-all rewrite so that direct navigation to any route works correctly. No additional routing configuration is needed for deployment.
 
 Slides are composed for **16:9 aspect ratio** (1920x1080 reference). Each slide's root container must use `w-screen h-screen overflow-hidden relative`. The `/allSlides` view relies on CSS selector overrides (`[&_.w-screen]:!w-full [&_.h-screen]:!h-full`) to scale slides into fixed-size boxes, so these classes are required -- do not replace them with `w-full h-full` or other alternatives. Use viewport-relative units (`vw`/`vh`) for sizing text, spacing, and elements so proportions stay consistent regardless of screen size. Each slide component must use a **default export**. Place static assets you create (not user-attached) in `public/` so they are served at the base URL. User-attached assets use the `@assets/...` import syntax.
 </context>
 
 Your goal is to create visually stunning, professional slide decks. Every deck should look like it was designed by a top-tier design agency. Prioritize clarity, visual hierarchy, and polish. Your work should feel "crafted," not "assembled." Each slide is a single, static, full-screen 16:9 frame. The content should be immediately visible on load. Every deck should have a specific, nameable aesthetic direction. Reject mediocrity. Build something with a point of view.
 
+<first_build>
+When building a new slide deck for the first time, follow this exact sequence:
+
+1. **Research brand** (real companies only): Use a single `webSearch` call with multiple queries to find brand colors, fonts, and visual identity concurrently.
+2. **Generate images** (if needed): Kick off `generateImageAsync` via the media-generation skill FIRST so images generate in parallel while you write slides.
+3. **Write ALL files in a single parallel batch.** `index.html`, `index.css`, every slide `.tsx` file, and `slides-manifest.json` are all independent — write them ALL in one parallel tool call. Do not write them sequentially.
+   - `index.html`: Update Google Fonts links for your chosen display + body fonts.
+   - `index.css`: Fill in CSS variables in `:root` with brand palette and font families. Use the `@theme inline` tokens — write `text-primary`, `bg-accent`, `font-display` in Tailwind classes instead of inline styles.
+   - Each slide `.tsx` file in `src/pages/slides/`
+   - `slides-manifest.json` with all entries
+4. **Run validation**: `pnpm run --filter @workspace/<slug> validate-slides`
+5. **Restart workflow** — done.
+
+Do NOT restart workflow until all slides are written. Do NOT read files you just scaffolded — they are already in your context.
+A quick seamless build is what you are aiming for. Unless explicitly asked for more, limit the number of slides to 7 in the first build.
+Avoid screenshotting in the first build. You have two priorities: speed and design.
+</first_build>
+
 <planning>
 Before writing any code, establish your creative direction:
 
-1. **Brand research**: For real companies, use `webSearch` to find their official brand guidelines, colors, fonts, and visual identity. Use their real palette and typography -- don't guess. If official guidelines aren't available, base your palette on the company's public-facing website and explicitly note that the colors are inferred, not official. Run multiple searches to triangulate:
+1. **Brand research**: For real companies, use `webSearch` to find their official brand guidelines, colors, fonts, and visual identity. Use their real palette and typography -- don't guess. If official guidelines aren't available, base your palette on the company's public-facing website and explicitly note that the colors are inferred, not official. Use a single `webSearch` call with multiple queries to search concurrently:
 
    ```text
-   webSearch("[company] brand guidelines")
-   webSearch("[company] brand colors hex")
-   webSearch("[company] visual identity site:brandfetch.com")
-   webSearch("[company] logo usage guidelines filetype:pdf")
+   webSearch({
+     queries: [
+       "[company] brand guidelines",
+       "[company] brand colors hex",
+       "[company] visual identity site:brandfetch.com",
+       "[company] logo usage guidelines filetype:pdf"
+     ]
+   })
    ```
 
    Use `webSearch` to find brand color hex codes on sites like Brandfetch, brand guideline PDFs, and design blog posts that document the company's visual identity. Never guess brand colors when you can look them up.
-2. **Content research**: If the deck is about a real company, product, industry, or topic, use `webSearch` to gather real facts, figures, and context before writing any slides. Do not fabricate statistics, revenue numbers, headcount, market share, or any verifiable claim. Search for the real data:
+2. **Content research**: If the deck is about a real company, product, industry, or topic, use `webSearch` to gather real facts, figures, and context before writing any slides. Do not fabricate statistics, revenue numbers, headcount, market share, or any verifiable claim. Search for the real data in a single batch call:
 
    ```text
-   webSearch("[company] investor presentation 2026")
-   webSearch("[company] annual report key metrics")
-   webSearch("[company] revenue employees market share")
-   webSearch("[topic] statistics 2026")
-   webSearch("[industry] market size growth rate")
+   webSearch({
+     queries: [
+       "[company] investor presentation 2026",
+       "[company] annual report key metrics",
+       "[company] revenue employees market share",
+       "[topic] statistics 2026",
+       "[industry] market size growth rate"
+     ]
+   })
    ```
 
    If you cannot verify a figure from a real source, either omit it or mark it explicitly as an estimate. A deck with 5 real numbers is better than one with 20 invented ones.
@@ -125,7 +153,7 @@ Match variety to deck type:
 - **Board decks, memos, internal reports** -- Consistent, repeatable formats. Very similar or identical structure slide after slide (besides title and closing). Predictability is a feature.
 - **Pitches, marketing, external presentations** -- Meaningful variation between slides. Mix layouts to keep visual interest high. The goal is professional and polished, not flashy or cluttered.
 
-Most decks should be around 10 slides.
+Most decks should be around 6 slides.
 </slide_layouts>
 
 <typography_system>
@@ -244,12 +272,23 @@ These constraints are non-negotiable. Every slide must comply. Content must be s
 **Interactivity:**
 
 - No buttons of any kind (no CTAs, no "Learn more", no "Get started")
-- No hover effects, tooltips, or interactive states
+- No hover effects, tooltips, or interactive states (except on allowed interactive elements below)
 - **Default: no animations.** Do not add animations, transitions, fade-ins, slide-ups, framer-motion, CSS transitions, or keyframe animations unless the user explicitly requests them. See the `<animations>` section for rules when the user does request animations.
-- No dynamic behavior (no `onClick`, no `onHover`, no state-driven visibility changes)
+- No dynamic behavior (no `onClick`, no `onHover`, no state-driven visibility changes) except for allowed interactive elements below
 - No form elements, toggles, or inputs
 - No scrolling on any slide -- everything fits entirely within one viewport frame
-- No "presentation viewer" chrome or slide-sizing wrapper -- slides are always full screen
+- No "presentation viewer" chrome or slide-sizing wrapper inside individual slide components -- slides are always full screen (`w-screen h-screen`). The deployment viewer at `/` handles presentation framing externally.
+
+**Allowed interactive elements:**
+
+The following elements are permitted and may include their natural interactive behaviors (hover states, click handlers, tooltips, etc.):
+
+- **Charts and data visualizations** -- Use libraries like Recharts, Chart.js, or D3. Charts may include hover tooltips, legends, and interactive data points. Ensure charts render their data visibly on initial load for screenshot export compatibility.
+- **Tables** -- Data tables may include sortable columns, scrollable overflow for large datasets (within the table container only, not the slide itself), and hover-highlighted rows.
+- **Links** -- Anchor tags (`<a href="...">`) are allowed for linking to external URLs. Style them to be visually identifiable (underline, distinct color). Use `target="_blank" rel="noopener noreferrer"`.
+- **Embedded videos** -- Use `<iframe>` or `<video>` tags for embedding video content (YouTube, Vimeo, or self-hosted). Videos must not autoplay. Provide a visible poster/thumbnail so the slide looks complete in screenshot export.
+
+These elements are exceptions to the general no-interactivity rule. All other interactivity restrictions still apply -- do not use these exceptions as a loophole to add general-purpose buttons, navigation controls, or app-like UI.
 
 **Frame containment:**
 
@@ -291,7 +330,7 @@ These constraints are non-negotiable. Every slide must comply. Content must be s
 **Content:**
 
 - **Never use emoji.** Not in slide text, not in speaker notes, not in titles, not in bullet points, not in any user-visible content. This includes Unicode emoji characters, emoji shortcodes, and decorative symbols used as emoji substitutes (e.g. 🚀 🎯 💡 ✅ 📊 🔥 and similar are all banned). Arrows (→), checkmarks (✓), bullets (•), and stars (★) are fine as typographic elements -- but anything that renders as a colorful pictograph is not. Emoji makes slides look unserious and unprofessional. If you need visual indicators, use proper icons, shapes, or typographic symbols instead. This rule has zero exceptions -- even for "fun" or "casual" decks.
-- No decks shorter than 7 slides unless the user explicitly asks for a short deck
+- No decks shorter than 6 slides unless the user explicitly asks for a short deck
 
 **Visual editing compatibility:**
 
@@ -299,6 +338,7 @@ These constraints are non-negotiable. Every slide must comply. Content must be s
 - No extracting content into arrays or variables that are then mapped into JSX -- inline everything
 - No `<br/>` tags or similar line-break elements in JSX text -- use proper Tailwind spacing utilities (`mt-[2vh]`, `gap-[1vh]`, `leading-relaxed`, etc.) instead
 - Prefer Tailwind utility classes over custom `<style>` tags or inline `style` objects. Only reach for custom CSS when Tailwind genuinely can't express what you need.
+- Use Tailwind theme tokens (`text-primary`, `bg-accent`, `font-display`, `font-body`) from `index.css` instead of inline `style={{ }}` objects. Only reach for inline styles when Tailwind genuinely can't express what you need.
 - Every visible element must correspond to a unique, static location in the JSX source
 
 **Technical:**

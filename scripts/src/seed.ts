@@ -3,7 +3,6 @@ import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-// Load .env from workspace root
 import dotenv from "dotenv";
 dotenv.config({ path: resolve(__dirname, "../../.env"), override: true });
 
@@ -22,9 +21,8 @@ function hashPassword(password: string): string {
 }
 
 async function seed() {
-  console.log("🌱 Seeding Neon database...\n");
+  console.log("🌱 Seeding database...\n");
 
-  // 1. Seed Admin
   const existing = await db.select().from(adminsTable);
   if (existing.length === 0) {
     await db.insert(adminsTable).values({
@@ -32,16 +30,20 @@ async function seed() {
       password: hashPassword("admin123"),
       name: "Super Admin",
       isActive: true,
+      isSuperAdmin: true,
       taxRate: "10",
       jodiMultiplier: "90",
       singleMultiplier: "9",
+      haruftMultiplier: "9",
     });
-    console.log("✅ Admin created: admin@hks.com / admin123");
+    console.log("✅ Super Admin created: admin@hks.com / admin123");
   } else {
-    console.log("ℹ️  Admin already exists");
+    await db.update(adminsTable).set({ isSuperAdmin: true, haruftMultiplier: "9" }).where(
+      (await import("drizzle-orm")).eq(adminsTable.id, existing[0].id)
+    );
+    console.log("ℹ️  Admin already exists - updated to super admin");
   }
 
-  // 2. Seed Markets
   const existingMarkets = await db.select().from(marketsTable);
   if (existingMarkets.length === 0) {
     const markets = [
@@ -51,6 +53,8 @@ async function seed() {
       { name: "Haryana Night", resultTime: "09:00 PM", isActive: true, isLive: false },
       { name: "Delhi Bazar", resultTime: "03:00 PM", isActive: true, isLive: false },
       { name: "Rajdhani Night", resultTime: "10:00 PM", isActive: true, isLive: false },
+      { name: "Gali", resultTime: "11:30 PM", isActive: true, isLive: false },
+      { name: "Desawar", resultTime: "05:00 AM", isActive: true, isLive: false },
     ];
     await db.insert(marketsTable).values(markets);
     console.log(`✅ ${markets.length} markets created`);
@@ -58,7 +62,6 @@ async function seed() {
     console.log(`ℹ️  Markets already exist (${existingMarkets.length})`);
   }
 
-  // 3. Seed UPI Account
   const existingUpi = await db.select().from(upiAccountsTable);
   if (existingUpi.length === 0) {
     await db.insert(upiAccountsTable).values({

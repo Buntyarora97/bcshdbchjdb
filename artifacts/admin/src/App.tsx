@@ -3,13 +3,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-// Hooks
 import { useAuth } from "@/hooks/use-auth";
-
-// Components
 import { Layout } from "@/components/layout";
 
-// Pages
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import UsersPage from "@/pages/users";
@@ -19,11 +15,12 @@ import DepositsPage from "@/pages/deposits";
 import WithdrawalsPage from "@/pages/withdrawals";
 import UpiPage from "@/pages/upi";
 import AnalyticsPage from "@/pages/analytics";
+import SubAdminsPage from "@/pages/sub-admins";
+import MyAccountPage from "@/pages/my-account";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
 
-// Auth Guard
 function ProtectedRoute({ component: Component, ...rest }: any) {
   const { isAuthenticated, isLoggingIn } = useAuth();
   
@@ -55,6 +52,8 @@ function Router() {
       <Route path="/withdrawals"><ProtectedRoute component={WithdrawalsPage} /></Route>
       <Route path="/upi"><ProtectedRoute component={UpiPage} /></Route>
       <Route path="/analytics"><ProtectedRoute component={AnalyticsPage} /></Route>
+      <Route path="/sub-admins"><ProtectedRoute component={SubAdminsPage} /></Route>
+      <Route path="/my-account"><ProtectedRoute component={MyAccountPage} /></Route>
       <Route component={NotFound} />
     </Switch>
   );

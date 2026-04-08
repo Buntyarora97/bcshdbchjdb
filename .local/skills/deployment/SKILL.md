@@ -1,11 +1,11 @@
 ---
 name: deployment
-description: Configure and publish your project. Use to set deployment settings and suggest publishing when the app is ready.
+description: Use when the user asks to publish, deploy, or configure deployment settings, or when the user reports their deployed app is broken, asks about production errors, or wants to check server logs.
 ---
 
 # Deployment Skill
 
-Configure deployment settings and publish your project to make it live and accessible.
+Configure deployment settings, publish your project, and debug deployment issues.
 
 ## When to Use
 
@@ -16,51 +16,36 @@ Use this skill when:
 - The user explicitly asks to publish or deploy the project
 - You've completed implementing a feature and verified it works
 - Setting up deployment for different project types (websites, bots, scheduled jobs)
+- The user reports their deployed application is not working correctly
+- The user wants to see what errors are occurring in production
+- The user needs to debug a runtime issue with their deployed app
+- The user asks to check deployment or server logs
 
 ## When NOT to Use
 
 - Project has known errors or incomplete features
 - You haven't validated that the project works
 - The user is just testing or prototyping
-- **You are a task agent running in a subrepl context and want to suggest publishing** — only the main repl can trigger a publish. However, `deployConfig()` is allowed because it only modifies `.replit` configuration. If you call `deployConfig()` from a task agent, remind the user that they will need to publish from the main version of the project after the current task is merged
+
+## Reference Documents
+
+This skill has additional reference documents for specific deployment scenarios. Read them as needed:
+
+- `references/deployment-logs.md` — How to fetch and analyze runtime deployment logs. Read this when the user's deployed app is misbehaving, the live site is down, or they want to check production logs.
 
 ## Available Functions
 
-### deployConfig(deploymentTarget, run, build, publicDir)
+### verifyAndReplaceArtifactToml({ tempFilePath, artifactTomlPath })
 
-Configure how the project should be deployed to production.
+Validate and replace an artifact's `artifact.toml` through a temp file (from the `artifacts` skill). To update deployment settings, copy the current `artifact.toml` to a temp file (e.g. `artifact.edit.toml`), edit the temp file, then call this callback with absolute paths. Do not edit `artifact.toml` directly. See the `artifacts` skill for full documentation, parameters, and usage rules.
 
-**Parameters:**
+### suggestDeploy()
 
-- `deploymentTarget` (str, required): "autoscale", "vm", "scheduled", or "static"
-- `run` (list[str], optional): Production run command. First entry is binary/script, rest are arguments
-- `build` (list[str], optional): Build/compile command before deployment
-- `publicDir` (str, required for "static"): Directory containing static files
+Prompt the user to click the Publish button after the app is ready. **Only works in the main repl context** — in task-agent/subrepl sessions this callback returns `success: false`. If you are in a task agent, skip this call and instead remind the user to publish from the main version after merging.
 
-**Returns:** Dict with `success`, `message`, and configuration details
+### fetchDeploymentLogs({ afterTimestamp, beforeTimestamp, message, messageContext })
 
-**Example:**
-
-```javascript
-// Configure a Python web app
-const result = await deployConfig({
-    deploymentTarget: "autoscale",
-    run: ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "main:app"]
-});
-
-// Configure a static site
-const result2 = await deployConfig({
-    deploymentTarget: "static",
-    build: ["npm", "run", "build"],
-    publicDir: "dist"
-});
-
-// Configure an always-running bot
-const result3 = await deployConfig({
-    deploymentTarget: "vm",
-    run: ["python", "bot.py"]
-});
-```
+Fetch and analyze deployment logs. See `references/deployment-logs.md` for full documentation.
 
 ## Deployment Targets
 
@@ -75,13 +60,6 @@ Use for stateless websites and APIs that don't need persistent server memory.
 - **State:** Use databases for persistent state (not server memory)
 - **Cost:** Most cost-effective for variable traffic
 
-```javascript
-await deployConfig({
-    deploymentTarget: "autoscale",
-    run: ["gunicorn", "--bind=0.0.0.0:5000", "app:app"]
-});
-```
-
 ### vm (Always Running)
 
 Use for applications that need persistent server-side state or long-running processes.
@@ -89,13 +67,6 @@ Use for applications that need persistent server-side state or long-running proc
 - **Best for:** Discord/Telegram bots, WebSocket servers, web scrapers, background workers
 - **Behavior:** Always running, maintains state in server memory
 - **State:** Can use in-memory databases, local files, or external databases
-
-```javascript
-await deployConfig({
-    deploymentTarget: "vm",
-    run: ["python", "bot.py"]
-});
-```
 
 ### scheduled
 
@@ -105,13 +76,6 @@ Use for cron-like jobs that run on a schedule.
 - **Behavior:** Runs on configured schedule, not continuously
 - **Note:** Do NOT use for websites or APIs
 
-```javascript
-await deployConfig({
-    deploymentTarget: "scheduled",
-    run: ["python", "daily_report.py"]
-});
-```
-
 ### static
 
 Use for client-side websites with no backend server.
@@ -120,46 +84,18 @@ Use for client-side websites with no backend server.
 - **Behavior:** Serves static files directly, no server-side processing
 - **Note:** The `run` command is ignored; must specify `publicDir`
 
-```javascript
-await deployConfig({
-    deploymentTarget: "static",
-    build: ["npm", "run", "build"],
-    publicDir: "dist"
-});
-```
+## Deployment Configuration in Pnpm workspace
 
-## Run Command Examples
+In a PNPM workspace, deployment configuration lives in each artifact's `.replit-artifact/artifact.toml` file, **not** in `.replit`. The `.replit` file's `deployment.run` is ignored and each artifact's `artifact.toml` controls run/build commands. `.replit`'s `deployment.build` acts only as a pre-build hook that runs at the repo root before artifact-specific builds.
 
-Use production-ready servers, not development servers:
+Each artifact's `[services.production]` section controls:
 
-```toml
-# Python with Gunicorn
-run=["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "main:app"]
+- `run` — the production run command
+- `build` — the production build command
+- `serve` — whether to serve as `static` or run a process
+- `publicDir` — directory containing static files (for static serve mode)
 
-# Python with Streamlit
-run=["streamlit", "run", "main.py"]
-
-# Node.js
-run=["node", "server.js"]
-
-# Multiple processes with bash
-run=["bash", "-c", "gunicorn --reuse-port -w 4 -b 0.0.0.0:8000 app:app & npm run dev"]
-```
-
-## Build Command Examples
-
-Only use build commands when compilation is needed:
-
-```toml
-# TypeScript/bundler
-build=["npm", "run", "build"]
-
-# Multiple build steps
-build=["bash", "-c", "make assets && make compile"]
-
-# Rust
-build=["cargo", "build", "--release"]
-```
+To update these settings, use `verifyAndReplaceArtifactToml` from the `artifacts` skill.
 
 ## Best Practices
 
@@ -174,15 +110,14 @@ build=["cargo", "build", "--release"]
 1. **User-initiated publishing**: The user must click the Publish button to actually deploy
 2. **Automatic handling**: Publishing handles building, hosting, TLS, and health checks automatically
 3. **Domain**: Published apps are available at a `.replit.app` domain or custom domain if configured
+4. **Production config lives in `artifact.toml`**: Each artifact's deployment settings are in its `.replit-artifact/artifact.toml` file, not in `.replit`. Always check `artifact.toml` when configuring deployment.
 
 ## Example Workflow
 
 ```javascript
-// 1. Configure deployment settings for a web app
-await deployConfig({
-    deploymentTarget: "autoscale",
-    run: ["gunicorn", "--bind=0.0.0.0:5000", "app:app"]
-});
+// 1. To update deployment settings, use verifyAndReplaceArtifactToml
+// from the artifacts skill (temp-file workflow)
 
 // 2. After verifying the app works, suggest publishing to the user
+await suggestDeploy();
 ```

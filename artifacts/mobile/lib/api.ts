@@ -2,8 +2,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const BASE_URL = "https://haryana-my-love-2jd4.onrender.com/api";
 
-
-
 async function getToken(): Promise<string | null> {
   return AsyncStorage.getItem("auth_token");
 }
@@ -46,6 +44,8 @@ export const api = {
   bets: {
     place: (body: { marketId: number; gameType: string; number: string; amount: number }) =>
       request<{ success: boolean; bet: any; newBalance: string }>("POST", "/bets", body),
+    placeMulti: (body: { marketId: number; bets: { gameType: string; number: string; amount: number }[] }) =>
+      request<{ success: boolean; betsPlaced: number; totalAmount: string; newBalance: string; bets: any[] }>("POST", "/bets/multi", body),
     my: () => request<{ bets: any[] }>("GET", "/bets/my"),
   },
   wallet: {

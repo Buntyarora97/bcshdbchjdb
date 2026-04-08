@@ -13,6 +13,7 @@ import { Platform, StyleSheet, useColorScheme, View } from "react-native";
 import { SymbolView } from "expo-symbols";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useColors } from "@/hooks/useColors";
 
 function NativeTabLayout() {
   return (
@@ -30,6 +31,7 @@ function NativeTabLayout() {
 }
 
 function ClassicTabLayout() {
+  const colors = useColors();
   const colorScheme = useColorScheme();
   const safeAreaInsets = useSafeAreaInsets();
   const isDark = colorScheme === "dark";
@@ -39,11 +41,13 @@ function ClassicTabLayout() {
   return (
     <Tabs
       screenOptions={{
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.mutedForeground,
         tabBarStyle: {
           position: "absolute",
-          backgroundColor: isIOS ? "transparent" : isDark ? "#000" : "#fff",
+          backgroundColor: isIOS ? "transparent" : colors.background,
           borderTopWidth: isWeb ? 1 : 0,
-          borderTopColor: isDark ? "#333" : "#ccc",
+          borderTopColor: colors.border,
           elevation: 0,
           paddingBottom: safeAreaInsets.bottom,
           ...(isWeb ? { height: 84 } : {}),
@@ -59,7 +63,7 @@ function ClassicTabLayout() {
             <View
               style={[
                 StyleSheet.absoluteFill,
-                { backgroundColor: isDark ? "#000" : "#fff" },
+                { backgroundColor: colors.background },
               ]}
             />
           ) : null,
@@ -134,6 +138,7 @@ Web doesn't support BlurView and gets undefined values from `Platform.select()` 
 
 ```tsx
 function ClassicTabLayout() {
+  const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const isWeb = Platform.OS === "web";
@@ -142,13 +147,13 @@ function ClassicTabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: isDark ? "#fff" : "#000",
-        tabBarInactiveTintColor: isDark ? "#888" : "#666",
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.mutedForeground,
         tabBarStyle: {
           position: "absolute",
-          backgroundColor: isIOS ? "transparent" : isDark ? "#000" : "#fff",
+          backgroundColor: isIOS ? "transparent" : colors.background,
           borderTopWidth: isWeb ? 1 : 0,
-          borderTopColor: isDark ? "#333" : "#ccc",
+          borderTopColor: colors.border,
           elevation: 0,
           ...(isWeb ? { height: 84 } : {})
         },
@@ -156,7 +161,7 @@ function ClassicTabLayout() {
           isIOS ? (
             <BlurView intensity={100} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFill} />
           ) : isWeb ? (
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: isDark ? "#000" : "#fff" }]} />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }]} />
           ) : null,
       }}
     >
@@ -170,7 +175,7 @@ function ClassicTabLayout() {
 
 - Use explicit `Platform.OS` checks instead of `Platform.select()` to ensure web is handled
 - Web needs a solid `View` background since BlurView doesn't work
-- Set `tabBarActiveTintColor` and `tabBarInactiveTintColor` explicitly - web defaults may not match your theme
+- Set `tabBarActiveTintColor` and `tabBarInactiveTintColor` from `useColors()` tokens — do not hardcode hex values
 - Add `borderTopWidth: 1` on web for visual separation
 - Add `height: 84` on web to inset the tab bar content
 - **`SymbolView` only renders on iOS** - use a `Platform.OS === "ios"` ternary with `Feather` from `@expo/vector-icons` for tab icons on web/Android
